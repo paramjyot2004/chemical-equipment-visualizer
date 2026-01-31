@@ -404,14 +404,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📸 Screenshots
 
-### Web Dashboard
-*[Add screenshot of your web dashboard here]*
+### Dark Theme - System Parameter Monitor
+Real-time equipment monitoring with live data table and distribution analytics
+![Dashboard Dark Theme](screenshots/dashboard-dark.png)
 
-### Desktop Application
-*[Add screenshot of your desktop app here]*
-
-### PDF Report
-*[Add screenshot of generated report here]*
+### Light Theme - ChemVis Pro Dashboard  
+Clean, modern interface with parameter averages, charts, and CSV import functionality
+![Dashboard Light Theme](screenshots/dashboard-light.png)
 
 ---
 
