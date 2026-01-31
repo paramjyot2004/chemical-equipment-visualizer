@@ -1,0 +1,5 @@
+{
+  "name": "Chemical Equipment Parameter Visualizer",
+  "description": "A comprehensive hybrid application featuring a Django REST backend, a modern React web dashboard with Recharts, and a standalone PyQt5 desktop client for monitoring chemical equipment parameters and generating PDF reports.",
+  "requestFramePermissions": []
+}
