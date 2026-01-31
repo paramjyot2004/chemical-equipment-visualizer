@@ -386,7 +386,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👨‍💻 Author
 
-**Paramjyot Singh**
+**Paramjyot Kaur**
 
 - GitHub: [@paramjyot2004](https://github.com/paramjyot2004)
 - Repository: [chemical-equipment-visualizer](https://github.com/paramjyot2004/chemical-equipment-visualizer)
@@ -437,4 +437,4 @@ This project demonstrates:
 
 ---
 
-Made with ❤️ by Paramjyot Singh
+Made with ❤️ by Paramjyot Kaur
