@@ -386,7 +386,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👨‍💻 Author
 
-**Paramjyot Singh**
+**Paramjyot Kaur**
 
 - GitHub: [@paramjyot2004](https://github.com/paramjyot2004)
 - Repository: [chemical-equipment-visualizer](https://github.com/paramjyot2004/chemical-equipment-visualizer)
@@ -408,9 +408,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Real-time equipment monitoring with live data table and distribution analytics
 ![Dashboard Dark Theme](screenshots/dashboard-dark.png)
 
+
 ### Light Theme - ChemVis Pro Dashboard  
 Clean, modern interface with parameter averages, charts, and CSV import functionality
 ![Dashboard Light Theme](screenshots/dashboard-light.png)
+
+### Desktop Application
+*[Add screenshot of your desktop app here]*
+3f94d22143cb75741ac2830ca27e24c92b612cde
 
 ---
 
@@ -436,4 +441,4 @@ This project demonstrates:
 
 ---
 
-Made with ❤️ by Paramjyot Singh
+Made with ❤️ by Paramjyot Kaur
