@@ -1,7 +1,9 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
+import { Login } from './components/Login';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { ReportsPage } from './components/ReportsPage';
 import { UploadSection } from './components/UploadSection';
 import { EquipmentTable } from './components/EquipmentTable';
 import { HistoryList } from './components/HistoryList';
@@ -10,7 +12,32 @@ import { EquipmentItem, SummaryStats, HistoryEntry } from './types';
 
 type Tab = 'dashboard' | 'equipment' | 'reports';
 
+interface Notification {
+  id: string;
+  type: 'success' | 'error' | 'info' | 'warning';
+  message: string;
+  timestamp: Date;
+}
+
+interface AdminSession {
+  isAdmin: boolean;
+  username: string;
+  loginTime: Date;
+  verificationStatus: 'verified' | 'pending' | 'failed';
+  lastVerificationTime?: Date;
+}
+
 const App: React.FC = () => {
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [adminSession, setAdminSession] = useState<AdminSession>({
+    isAdmin: false,
+    username: '',
+    loginTime: new Date(),
+    verificationStatus: 'pending'
+  });
+
+  // Tab and data state
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [summary, setSummary] = useState<SummaryStats | null>(null);
   const [equipment, setEquipment] = useState<EquipmentItem[]>([]);
@@ -18,6 +45,78 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isLive, setIsLive] = useState(false);
   const [isDemo, setIsDemo] = useState(true);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  // Check if user is already logged in on mount
+  useEffect(() => {
+    const savedCredentials = localStorage.getItem('auth_credentials');
+    if (savedCredentials) {
+      const creds = JSON.parse(savedCredentials);
+      setIsAuthenticated(true);
+      // Check if admin on restore
+      verifyAdminAccess(creds.username);
+    }
+  }, []);
+
+  // Verify admin access based on credentials
+  const verifyAdminAccess = useCallback((username: string) => {
+    const isAdmin = username.toLowerCase() === 'admin';
+    setAdminSession({
+      isAdmin,
+      username,
+      loginTime: new Date(),
+      verificationStatus: isAdmin ? 'verified' : 'failed',
+      lastVerificationTime: new Date()
+    });
+    return isAdmin;
+  }, []);
+
+  // Add notification helper
+  const addNotification = useCallback((message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    const newNotif: Notification = {
+      id: Date.now().toString(),
+      type,
+      message,
+      timestamp: new Date()
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== newNotif.id));
+    }, 5000);
+  }, []);
+
+  // Handle login
+  const handleLogin = (username: string, password: string) => {
+    // Store credentials in localStorage
+    localStorage.setItem('auth_credentials', JSON.stringify({ username, password }));
+    setIsAuthenticated(true);
+    
+    // Verify admin access
+    const isAdmin = verifyAdminAccess(username);
+    
+    // Add appropriate notification
+    if (isAdmin) {
+      addNotification('🔐 Admin access verified • System privileges enabled', 'success');
+    } else {
+      addNotification('✓ Logged in as user', 'success');
+    }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem('auth_credentials');
+    setIsAuthenticated(false);
+    setAdminSession({
+      isAdmin: false,
+      username: '',
+      loginTime: new Date(),
+      verificationStatus: 'pending'
+    });
+    setActiveTab('dashboard');
+    addNotification('Successfully logged out', 'info');
+  };
 
   // Fetch all necessary data from the API
   const fetchData = useCallback(async () => {
@@ -41,15 +140,17 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Initial Data Load
+  // Initial Data Load (only if authenticated)
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (isAuthenticated) {
+      fetchData();
+    }
+  }, [isAuthenticated, fetchData]);
 
   // Real-time Update Listener (WebSockets)
   useEffect(() => {
-    // If in Demo Mode, don't attempt WebSocket connection
-    if (isDemo) {
+    // If not authenticated, demo mode, or no WebSocket support, skip
+    if (!isAuthenticated || isDemo) {
       setIsLive(false);
       return;
     }
@@ -82,8 +183,14 @@ const App: React.FC = () => {
 
     connectWS();
     return () => { if (socket) socket.close(); };
-  }, [isDemo, fetchData]);
+  }, [isAuthenticated, isDemo, fetchData]);
 
+  // If not authenticated, show login page
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
+
+  // Main authenticated app layout
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       {/* Navigation Header */}
@@ -92,6 +199,10 @@ const App: React.FC = () => {
         isDemo={isDemo}
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        onLogout={handleLogout}
+        notifications={notifications}
+        onNotificationClear={(id) => setNotifications(prev => prev.filter(n => n.id !== id))}
+        adminSession={adminSession}
       />
 
       <main className="flex-grow container mx-auto px-4 py-8">
@@ -108,29 +219,16 @@ const App: React.FC = () => {
             )}
             
             {activeTab === 'reports' && (
-              <div className="bg-white p-12 rounded-xl border border-slate-200 shadow-sm text-center animate-fade-in">
-                <div className="w-20 h-20 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl">
-                    <i className="fas fa-file-invoice"></i>
-                </div>
-                <h3 className="text-xl font-black text-slate-700 mb-2 uppercase tracking-tight">Compliance & Audit Hub</h3>
-                <p className="text-slate-500 max-w-md mx-auto text-sm leading-relaxed">
-                  Generate regulatory-grade PDF reports including visual distribution charts and average parameter metrics for equipment inspections.
-                </p>
-                <div className="mt-8 flex justify-center space-x-4">
-                    <button 
-                        onClick={() => setActiveTab('dashboard')}
-                        className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold uppercase transition-all"
-                    >
-                        View Analytics
-                    </button>
-                </div>
-              </div>
+              <ReportsPage summary={summary} loading={loading} />
             )}
           </div>
 
           {/* Sidebar Area */}
           <div className="space-y-8">
-            <UploadSection onUploadSuccess={fetchData} />
+            <UploadSection onUploadSuccess={() => {
+              addNotification('✓ Dataset synchronized successfully!', 'success');
+              fetchData();
+            }} />
             <HistoryList history={history} loading={loading} />
           </div>
 
